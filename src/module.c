@@ -4,6 +4,7 @@
 #include <python3.8/Python.h>
 #include "structmember.h"
 
+#define DEFAULT_BUCKET_SIZE 10
 
 struct {
     PyObject_HEAD
@@ -28,7 +29,7 @@ DAho_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self == NULL)
         return NULL;
 
-    self->daho_size = 31;
+    self->daho_size = DEFAULT_BUCKET_SIZE;
     PyArg_ParseTuple(args, "|i", &self->daho_size);
 
     self->daho = dynamic_aho_init(self->daho_size);
@@ -89,12 +90,34 @@ DAho_request(DAhoObject *self, PyObject *args, PyObject *kwds)
     );
 }
 
+static PyObject *
+DAho_resize(DAhoObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"size", NULL};
+
+    int new_size;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|", kwlist, &new_size))
+        return NULL;
+
+    if (new_size < 0)
+        return NULL;
+
+    resize(self->daho, new_size);
+    self->daho_size = new_size;
+
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef DAho_methods[] = {
     {"insert", (PyCFunction) DAho_insert, METH_VARARGS | METH_KEYWORDS,
      "insert string to aho set"
     },
     {"request", (PyCFunction) DAho_request, METH_VARARGS | METH_KEYWORDS,
      "count the inclusions of strings from the aho set in a text"
+    },
+    {"resize", (PyCFunction) DAho_resize, METH_VARARGS | METH_KEYWORDS,
+     "change aho buckets count"
     },
     {NULL}  /* Sentinel */
 };

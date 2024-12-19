@@ -1,6 +1,7 @@
 #include "aho.h"
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -12,6 +13,9 @@ bool alpha(char c) {
 
 node_t* node_init() {
     node_t* node = (node_t*) malloc(sizeof(*node));
+    if (node == NULL)
+        return NULL;
+
     node->p = NULL;
     node->link = NULL;
     for (size_t i = 0; i < ALPHA_SIZE; ++i) {
@@ -109,6 +113,9 @@ void rebuild(aho_t* aho, aho_t** other) {
 
 aho_t* aho_init() {
     aho_t* aho = (aho_t*) malloc(sizeof(*aho));
+    if (aho == NULL)
+        return NULL;
+
     aho->root = node_init();
     aho->root->cnt = 0;
     aho->words_count = 0;
@@ -169,13 +176,32 @@ uint32_t count_entry(aho_t* aho, const char* str) {
 
 dynamic_aho_t* dynamic_aho_init(uint32_t size) {
     dynamic_aho_t* aho = (dynamic_aho_t*) malloc(sizeof(*aho));
+    if (aho == NULL)
+        return NULL;
+
     aho->buckets = (aho_t**) malloc(sizeof(aho_t*) * size);
+    if (aho->buckets == NULL)
+        return NULL;
 
     aho->size = size;
     for (size_t i = 0; i < size; ++i)
         aho->buckets[i] = aho_init();
 
     return aho;
+}
+
+void resize(dynamic_aho_t* aho, uint32_t size) {
+    if (size < aho->size)
+        for (size_t i = size; i < aho->size; ++i)
+            aho_delete(aho->buckets[i]);
+
+    aho->buckets = realloc(aho->buckets, size * sizeof(aho_t*));
+
+    if (aho->size < size)
+        for (size_t i = aho->size; i < size; ++i)
+            aho->buckets[i] = aho_init();
+
+    aho->size = size;
 }
 
 void dynamic_aho_delete(dynamic_aho_t* aho) {
@@ -190,6 +216,9 @@ void insert(dynamic_aho_t* aho, const char* str, int32_t count) {
     for (; empty_bucket < aho->size; ++empty_bucket)
         if (aho->buckets[empty_bucket]->words_count == 0)
             break;
+
+    if (empty_bucket == aho->size)
+        resize(aho, aho->size << 1);
 
     for (size_t i = 0; i < empty_bucket; ++i)
         rebuild(aho->buckets[empty_bucket], &aho->buckets[i]);

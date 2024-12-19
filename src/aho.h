@@ -64,3 +64,5 @@ void dynamic_aho_delete(dynamic_aho_t* aho);
 void insert(dynamic_aho_t* aho, const char* str, int32_t count);
 
 int32_t request(dynamic_aho_t* aho, const char* str);
+
+void resize(dynamic_aho_t* aho, uint32_t size);

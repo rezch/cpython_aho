@@ -81,7 +81,7 @@ DAho_request(DAhoObject *self, PyObject *args, PyObject *kwds)
 
     char *str;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|", kwlist, &str))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", kwlist, &str))
         return NULL;
 
     return Py_BuildValue(
@@ -97,7 +97,7 @@ DAho_resize(DAhoObject *self, PyObject *args, PyObject *kwds)
 
     int new_size;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|", kwlist, &new_size))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i", kwlist, &new_size))
         return NULL;
 
     if (new_size < 0)

@@ -9,7 +9,8 @@ setup(
             'daho',
             [
                 'module.c',
-                'aho.c'
+                'aho.c',
+                'map.c'
             ],
         )
     ]

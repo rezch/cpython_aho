@@ -5,9 +5,6 @@
 #include <stdint.h>
 
 
-#define ALPHA_SIZE 26
-#define MIN_ALPHA 'a'
-
 struct node_t {
     struct node_t *p;
     struct node_t *link;

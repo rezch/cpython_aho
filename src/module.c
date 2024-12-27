@@ -49,6 +49,7 @@ DAho_init(DAhoObject *self, PyObject *args, PyObject *kwds)
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &self->daho_size))
         return -1;
+
     return 0;
 }
 
@@ -69,7 +70,12 @@ DAho_insert(DAhoObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|i", kwlist, &str, &count))
         return NULL;
 
-    insert(self->daho, str, count);
+    if (insert(self->daho, str, count) == -1) {
+        PyErr_SetString(
+            PyExc_RuntimeError,
+            "some internal lib error on insert"
+        );
+    }
 
     Py_RETURN_NONE;
 }
@@ -84,10 +90,15 @@ DAho_request(DAhoObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", kwlist, &str))
         return NULL;
 
-    return Py_BuildValue(
-            "i",
-            request(self->daho, str)
-    );
+    int32_t result = request(self->daho, str);
+    if (result == -1) {
+        PyErr_SetString(
+            PyExc_RuntimeError,
+            "some internal lib error on request"
+        );
+    }
+
+    return Py_BuildValue("i", result);
 }
 
 static PyObject *
@@ -103,7 +114,13 @@ DAho_resize(DAhoObject *self, PyObject *args, PyObject *kwds)
     if (new_size < 0)
         return NULL;
 
-    resize(self->daho, new_size);
+    if (resize(self->daho, new_size) == -1) {
+        PyErr_SetString(
+            PyExc_MemoryError,
+            "cannot resize structure"
+        );
+    }
+
     self->daho_size = new_size;
 
     Py_RETURN_NONE;

@@ -1,6 +1,5 @@
 #include "aho.h"
 #include "map.h"
-#include <time.h>
 
 
 static node_t* node_init() {
@@ -59,20 +58,20 @@ static node_t* get_link(aho_t *aho, node_t *node) {
 
 static node_t* go(aho_t *aho, node_t *node, char by) {
     if (map_contains(node->go, by))
-        return map_at(node->go, by)->ptr;
+        return map_at(node->go, by)->value;
 
     map_node_t *go_node = map_at(node->go, by);
     if (go_node == NULL)
         return NULL;
 
     if (map_contains(node->to, by)) {
-        return go_node->ptr = map_at(node->to, by)->ptr;
+        return go_node->value = map_at(node->to, by)->value;
     }
 
     if (node == aho->root)
-        return go_node->ptr = aho->root;
+        return go_node->value = aho->root;
     
-    return go_node->ptr = go(aho, get_link(aho, node), by);
+    return go_node->value = go(aho, get_link(aho, node), by);
 }
 
 static int get_cnt(aho_t *aho, node_t *node) {
@@ -96,7 +95,7 @@ static void aho_delete_nodes(node_t *root) {
         return;
 
     for (size_t i = 0; i < root->to->size; ++i)
-        aho_delete_nodes(root->to->data[i]->ptr);
+        aho_delete_nodes(root->to->data[i]->value);
 
     delete_map(root->to);
     delete_map(root->go);
@@ -112,7 +111,7 @@ static int clear_links(node_t *node) {
 
     map_node_t **ptr = node->to->data;
     for (size_t i = 0; i < node->to->size; ++i, ++ptr)
-        if (clear_links((*ptr)->ptr) == -1)
+        if (clear_links((*ptr)->value) == -1)
             return -1;
 
     return 0;
@@ -129,14 +128,14 @@ static int build_from(node_t *curr, node_t *other) {
             return -1;
 
         if (!contains) {
-            curr_node->ptr = add_node(curr, key);
+            curr_node->value = add_node(curr, key);
         }
 
         map_node_t *other_node = map_at(other->to, key);
         if (other_node == NULL)
             return -1;
 
-        if (build_from(curr_node->ptr, other_node->ptr) == -1)
+        if (build_from(curr_node->value, other_node->value) == -1)
             return -1;
     }
 
@@ -187,14 +186,14 @@ int add(aho_t *aho, const char *str, int32_t count) {
     for (const char *c_ptr = str; *c_ptr != '\0'; ++c_ptr) {
         char c = *c_ptr;
         bool contains = map_contains(curr->to, c);
-        map_node_t *node = map_at(curr->to, c);
-        if (node == NULL)
+        map_node_t *next = map_at(curr->to, c);
+        if (next == NULL)
             return -1;
 
         if (!contains)
-            node->ptr = add_node(curr, c);
+            next->value = add_node(curr, c);
 
-        curr = node->ptr;
+        curr = next->value;
         curr->cnt = -1;
     }
 
@@ -249,7 +248,7 @@ int resize(dynamic_aho_t *aho, uint32_t size) {
         for (size_t i = size; i < aho->size; ++i)
             aho_delete(aho->buckets[i]);
 
-    aho->buckets = realloc(aho->buckets, size  *sizeof(aho_t*));
+    aho->buckets = realloc(aho->buckets, size * sizeof(aho_t*));
     if (aho->buckets == NULL)
         return -1;
 

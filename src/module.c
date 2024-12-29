@@ -2,14 +2,15 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <python3.8/Python.h>
-#include "structmember.h"
+#include <python3.8/structmember.h>
 
-#define DEFAULT_BUCKET_SIZE 10
+static const uint32_t DEFAULT_BUCKET_SIZE = 10;
+
 
 struct {
     PyObject_HEAD
-    dynamic_aho_t* daho; /* dynamic daho */
-    int daho_size;       /* daho buckets count */
+    dynamic_aho_t* daho;    /* dynamic daho struct */
+    int daho_size;          /* buckets count */
 } typedef DAhoObject;
 
 static void
@@ -17,15 +18,14 @@ DAho_dealloc(DAhoObject *self)
 {
     dynamic_aho_delete(self->daho);
     Py_XDECREF(self->daho);
-    Py_TYPE(self)->tp_free((PyObject *) self);
+    Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
-static PyObject *
+static PyMODINIT_FUNC
 DAho_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     DAhoObject *self;
-    self = (DAhoObject *) type->tp_alloc(type, 0);
-
+    self = (DAhoObject*) type->tp_alloc(type, 0);
     if (self == NULL)
         return NULL;
 
@@ -39,7 +39,7 @@ DAho_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    return (PyObject *) self;
+    return (PyObject*) self;
 }
 
 static int
@@ -53,13 +53,7 @@ DAho_init(DAhoObject *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static PyMemberDef DAho_members[] = {
-    {"buckets", T_INT, offsetof(DAhoObject, daho_size), 0,
-     "daho buckets count"},
-    {NULL}  /* Sentinel */
-};
-
-static PyObject *
+static PyMODINIT_FUNC
 DAho_insert(DAhoObject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"string", "count", NULL};
@@ -80,7 +74,7 @@ DAho_insert(DAhoObject *self, PyObject *args, PyObject *kwds)
     Py_RETURN_NONE;
 }
 
-static PyObject *
+static PyMODINIT_FUNC
 DAho_request(DAhoObject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"text", NULL};
@@ -101,7 +95,7 @@ DAho_request(DAhoObject *self, PyObject *args, PyObject *kwds)
     return Py_BuildValue("i", result);
 }
 
-static PyObject *
+static PyMODINIT_FUNC
 DAho_resize(DAhoObject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"size", NULL};
@@ -126,57 +120,81 @@ DAho_resize(DAhoObject *self, PyObject *args, PyObject *kwds)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef DAho_methods[] = {
-    {"insert", (PyCFunction) DAho_insert, METH_VARARGS | METH_KEYWORDS,
-     "insert string to aho set"
+static PyMethodDef
+DAho_methods[] = {
+    {
+        .ml_name    =   "insert",
+        .ml_meth    =   (PyCFunction) DAho_insert,
+        .ml_flags   =   METH_VARARGS | METH_KEYWORDS,
+        .ml_doc     =   "insert string to aho set"
     },
-    {"request", (PyCFunction) DAho_request, METH_VARARGS | METH_KEYWORDS,
-     "count the inclusions of strings from the aho set in a text"
+    {
+        .ml_name    =   "request",
+        .ml_meth    =   (PyCFunction) DAho_request,
+        .ml_flags   =   METH_VARARGS | METH_KEYWORDS,
+        .ml_doc     =   "count the inclusions of strings from the aho set in a text"
     },
-    {"resize", (PyCFunction) DAho_resize, METH_VARARGS | METH_KEYWORDS,
-     "change aho buckets count"
+    {
+        .ml_name    =   "resize",
+        .ml_meth    =   (PyCFunction) DAho_resize,
+        .ml_flags   =   METH_VARARGS | METH_KEYWORDS,
+        .ml_doc     =   "change aho buckets count"
     },
-    {NULL}  /* Sentinel */
+    { NULL }    /* Sentinel */
 };
 
-static PyTypeObject DAhoType = {
+static PyMemberDef
+DAho_members[] = {
+    {
+        .name       =   "buckets",
+        .type       =   T_INT,
+        .offset     =   offsetof(DAhoObject, daho_size),
+        .flags      =   0,
+        .doc        =   "daho buckets count"
+    },
+    { NULL }    /* Sentinel */
+};
+
+static PyTypeObject
+DAhoType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "daho.DAho",
-    .tp_doc = "Dynamic daho",
-    .tp_basicsize = sizeof(DAhoObject),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_new = DAho_new,
-    .tp_init = (initproc) DAho_init,
-    .tp_dealloc = (destructor) DAho_dealloc,
-    .tp_members = DAho_members,
-    .tp_methods = DAho_methods,
+    .tp_name        =   "daho.DAho",
+    .tp_doc         =   "Dynamic daho",
+    .tp_basicsize   =   sizeof(DAhoObject),
+    .tp_itemsize    =   0,
+    .tp_flags       =   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_new         =   DAho_new,
+    .tp_init        =   (initproc) DAho_init,
+    .tp_dealloc     =   (destructor) DAho_dealloc,
+    .tp_members     =   DAho_members,
+    .tp_methods     =   DAho_methods,
 };
 
-static PyModuleDef dahomodule = {
+static PyModuleDef
+dahomodule = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "daho",
-    .m_doc = "Dynamic daho",
-    .m_size = -1,
+    .m_name         =   "daho",
+    .m_doc          =   "Dynamic daho",
+    .m_size         =   -1,
 };
 
 PyMODINIT_FUNC
 PyInit_daho(void)
 {
-    PyObject *m;
+    PyObject *module;
     if (PyType_Ready(&DAhoType) < 0)
         return NULL;
 
-    m = PyModule_Create(&dahomodule);
-    if (m == NULL)
+    module = PyModule_Create(&dahomodule);
+    if (module == NULL)
         return NULL;
 
     Py_INCREF(&DAhoType);
-    if (PyModule_AddObject(m, "DAho", (PyObject *) &DAhoType) < 0) {
+    if (PyModule_AddObject(module, "DAho", (PyObject *) &DAhoType) < 0) {
         Py_DECREF(&DAhoType);
-        Py_DECREF(m);
+        Py_DECREF(module);
         return NULL;
     }
 
-    return m;
+    return module;
 }

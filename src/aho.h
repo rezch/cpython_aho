@@ -15,18 +15,15 @@ struct node_t {
     int32_t cnt;
 } typedef node_t;
 
-
 struct aho_t {
     node_t *root;
     uint32_t words_count;
 } typedef aho_t;
 
-
 struct dynamic_aho_t {
     uint32_t size;
     aho_t **buckets;
 } typedef dynamic_aho_t;
-
 
 static node_t* node_init();
 
@@ -48,8 +45,6 @@ static int build_from(node_t *curr, node_t *other);
 
 static int rebuild(aho_t *aho, aho_t **other);
 
-
-// ------ USER FUNCTIONS ------
 aho_t* aho_init();
 
 void aho_delete(aho_t *aho);

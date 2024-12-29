@@ -6,7 +6,7 @@
 
 struct map_node_t {
     int key;
-    void *ptr;
+    void *value;
 } typedef map_node_t;
 
 struct map_t {
@@ -15,15 +15,12 @@ struct map_t {
     map_node_t **data;
 } typedef map_t;
 
-
 static map_node_t* map_node_init();
 
 static int reserve_map(map_t *map, size_t capacity);
 
 static int resize_map(map_t *map, size_t size);
 
-
-// ------ USER FUNCTIONS ------
 map_t* map_init();
 
 void delete_map(map_t *map);

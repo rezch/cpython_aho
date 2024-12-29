@@ -3,7 +3,7 @@
 
 static map_node_t* map_node_init() {
     map_node_t *node = (map_node_t*) malloc(sizeof(map_node_t));
-    node->ptr = NULL;
+    node->value = NULL;
     return node;
 }
 
@@ -13,8 +13,8 @@ static int reserve_map(map_t *map, size_t capacity) {
 
     if (capacity <= map->capacity) {
         for (size_t i = capacity; i < map->capacity; ++i) {
-            if (map->data[i]->ptr != NULL)
-                free(map->data[i]->ptr);
+            if (map->data[i]->value != NULL)
+                free(map->data[i]->value);
             free(map->data[i]);
         }
 
@@ -22,7 +22,7 @@ static int reserve_map(map_t *map, size_t capacity) {
         return 0;
     }
 
-    map->data = realloc(map->data, capacity * sizeof(map_node_t**));
+    map->data = (map_node_t**) realloc(map->data, capacity * sizeof(map_node_t**));
     if (map->data == NULL)
         return -1;
 

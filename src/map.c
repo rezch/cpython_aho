@@ -3,6 +3,8 @@
 
 static map_node_t* map_node_init() {
     map_node_t *node = (map_node_t*) malloc(sizeof(map_node_t));
+    if (node == NULL)
+        return NULL;
     node->value = NULL;
     return node;
 }

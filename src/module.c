@@ -17,7 +17,6 @@ static void
 DAho_dealloc(DAhoObject *self)
 {
     dynamic_aho_delete(self->daho);
-    Py_XDECREF(self->daho);
     Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
@@ -45,7 +44,7 @@ DAho_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 DAho_init(DAhoObject *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"daho_size", NULL};
+    static char *kwlist[] = {"size", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &self->daho_size))
         return -1;

@@ -241,6 +241,7 @@ dynamic_aho_t* dynamic_aho_init(uint32_t size) {
 void dynamic_aho_delete(dynamic_aho_t *aho) {
     for (size_t i = 0; i < aho->size; ++i)
         aho_delete(aho->buckets[i]);
+    free(aho);
 }
 
 int resize(dynamic_aho_t *aho, uint32_t size) {

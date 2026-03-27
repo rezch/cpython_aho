@@ -10,11 +10,16 @@ static node_t* node_init() {
     node->p = NULL;
     node->link = NULL;
 
-    if ((node->to = map_init()) == NULL)
+    if ((node->to = map_init()) == NULL) {
+        free(node);
         return NULL;
+    }
 
-    if ((node->go = map_init()) == NULL)
+    if ((node->go = map_init()) == NULL) {
+        free(node->to);
+        free(node);
         return NULL;
+    }
 
     node->pch = 0;
     node->terminated = 0;
@@ -44,6 +49,8 @@ static int clear_node(node_t *node) {
     return 0;
 }
 
+static node_t* go(aho_t *aho, node_t *node, char by);
+
 static node_t* get_link(aho_t *aho, node_t *node) {
     if (node->link != NULL)
         return node->link;
@@ -58,20 +65,20 @@ static node_t* get_link(aho_t *aho, node_t *node) {
 
 static node_t* go(aho_t *aho, node_t *node, char by) {
     if (map_contains(node->go, by))
-        return map_at(node->go, by)->value;
+        return *map_at(node->go, by);
 
-    map_node_t *go_node = map_at(node->go, by);
+    void **go_node = map_at(node->go, by);
     if (go_node == NULL)
         return NULL;
 
     if (map_contains(node->to, by)) {
-        return go_node->value = map_at(node->to, by)->value;
+        return *go_node = *map_at(node->to, by);
     }
 
     if (node == aho->root)
-        return go_node->value = aho->root;
-    
-    return go_node->value = go(aho, get_link(aho, node), by);
+        return *go_node = aho->root;
+
+    return *go_node = go(aho, get_link(aho, node), by);
 }
 
 static int get_cnt(aho_t *aho, node_t *node) {
@@ -123,19 +130,19 @@ static int build_from(node_t *curr, node_t *other) {
     for (size_t i = 0; i < other->to->size; ++i) {
         int key = other->to->data[i]->key;
         bool contains = map_contains(curr->to, key);
-        map_node_t *curr_node = map_at(curr->to, key);
+        void **curr_node = map_at(curr->to, key);
         if (curr_node == NULL)
             return -1;
 
         if (!contains) {
-            curr_node->value = add_node(curr, key);
+            *curr_node = add_node(curr, key);
         }
 
-        map_node_t *other_node = map_at(other->to, key);
+        void **other_node = map_at(other->to, key);
         if (other_node == NULL)
             return -1;
 
-        if (build_from(curr_node->value, other_node->value) == -1)
+        if (build_from(*curr_node, *other_node) == -1)
             return -1;
     }
 
@@ -166,8 +173,10 @@ aho_t* aho_init() {
     if (aho == NULL)
         return NULL;
 
-    if ((aho->root = node_init()) == NULL)
+    if ((aho->root = node_init()) == NULL) {
+        free(aho);
         return NULL;
+    }
 
     aho->root->cnt = 0;
     aho->words_count = 0;
@@ -186,14 +195,14 @@ int add(aho_t *aho, const char *str, int32_t count) {
     for (const char *c_ptr = str; *c_ptr != '\0'; ++c_ptr) {
         char c = *c_ptr;
         bool contains = map_contains(curr->to, c);
-        map_node_t *next = map_at(curr->to, c);
+        void **next = map_at(curr->to, c);
         if (next == NULL)
             return -1;
 
         if (!contains)
-            next->value = add_node(curr, c);
+            *next = add_node(curr, c);
 
-        curr = next->value;
+        curr = *next;
         curr->cnt = -1;
     }
 
@@ -227,13 +236,19 @@ dynamic_aho_t* dynamic_aho_init(uint32_t size) {
         return NULL;
 
     aho->buckets = (aho_t**) malloc(sizeof(aho_t*) * size);
-    if (aho->buckets == NULL)
+    if (aho->buckets == NULL) {
+        free(aho);
         return NULL;
+    }
 
     aho->size = size;
-    for (size_t i = 0; i < size; ++i)
-        if ((aho->buckets[i] = aho_init()) == NULL)
+    for (size_t i = 0; i < size; ++i) {
+        if ((aho->buckets[i] = aho_init()) == NULL) {
+            free(aho->buckets);
+            free(aho);
             return NULL;
+        }
+    }
 
     return aho;
 }

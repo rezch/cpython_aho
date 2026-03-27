@@ -83,10 +83,10 @@ bool map_contains(map_t *map, int key) {
     return false;
 }
 
-map_node_t* map_at(map_t *map, int key) {
+void **map_at(map_t *map, int key) {
     for (size_t i = 0; i < map->size; ++i)
         if (map->data[i]->key == key)
-            return map->data[i];
+            return &map->data[i]->value;
 
     if (resize_map(map, map->size + 1) < 0)
         return NULL;
@@ -95,5 +95,5 @@ map_node_t* map_at(map_t *map, int key) {
         map->data[map->size - 1] = map_node_init();
 
     map->data[map->size - 1]->key = key;
-    return map->data[map->size - 1];
+    return &map->data[map->size - 1]->value;
 }

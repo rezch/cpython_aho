@@ -15,16 +15,10 @@ struct map_t {
     map_node_t **data;
 } typedef map_t;
 
-static map_node_t* map_node_init();
-
-static int reserve_map(map_t *map, size_t capacity);
-
-static int resize_map(map_t *map, size_t size);
-
 map_t* map_init();
 
 void delete_map(map_t *map);
 
 bool map_contains(map_t *map, int key);
 
-map_node_t* map_at(map_t *map, int key);
+void **map_at(map_t *map, int key);
